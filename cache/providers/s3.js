@@ -9,8 +9,10 @@ AWS.config.apiVersions = {
 class S3Provider {
     constructor(options) {
         this.bucket = options.bucket;
+        this.acl = options.acl;
+        this.contentType = options.contentType;
         if (options.generation) {
-            this.keyPrefix = `${generation}__`;
+            this.keyPrefix = `${options.generation}/`;
         } else {
             this.keyPrefix = '';
         }
@@ -37,19 +39,41 @@ class S3Provider {
             })
     }
 
-    push(key) {
+    push(key, item) {
         const prefixedKey = this.keyPrefix + key;
         
-        return item => {
-            const uploadPromise = this.s3.upload({
-                Bucket: this.bucket,
-                Key: prefixedKey,
-                Body: item,
-            }).promise();
+        const uploadPromise = this.s3.upload({
+            Bucket: this.bucket,
+            Key: prefixedKey,
+            Body: item,
+            ACL: this.acl,
+            ContentType: this.contentType,
+        }).promise();
 
-            return uploadPromise
-                .then(() => item);
-        }
+        return uploadPromise;
+    }
+
+    head(key) {
+        const prefixedKey = this.keyPrefix + key;
+
+        const getMetaPromise = this.s3.headObject({
+            Bucket: this.bucket,
+            Key: prefixedKey,
+        }).promise();
+
+        return getMetaPromise
+            .then(meta => ({...meta, Location: this.makeObjectLocation(key)}))
+            .catch(error => {
+                if (error.statusCode === 404) {
+                    throw new NotCachedError();
+                }
+                throw error;
+            });
+    }
+
+    makeObjectLocation(key) {
+        const prefixedKey = this.keyPrefix + key;
+        return `${this.s3.endpoint.href}${this.bucket}/${prefixedKey}`;
     }
 }
 

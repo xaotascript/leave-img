@@ -18,10 +18,10 @@ http.createServer(function (req, res) {
 		numbers[3] = d[d.length - 1] || '0';
 	}
 
-	image.getCached(numbers)
-		.then(imageBuffer => {
-			res.writeHead(200, { 'Content-Type': 'image/png' });
-			res.end(imageBuffer, 'binary');
+	image.getCachedMeta(numbers)
+		.then(({Location}) => {
+			res.writeHead(301, {Location});
+			res.end();
 		});
 }).listen(PORT, function () {
 	console.log(`Server started on port ${PORT}`);

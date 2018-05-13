@@ -6,16 +6,13 @@ class NodeProvider {
     }
 
     pull(key) {
-        return new Promise((resolve, reject) =>
-            this.storage[key]
-                ? resolve(this.storage[key])
-                : reject(new NotFoundError()));
+        return this.storage[key]
+                ? Promise.resolve(this.storage[key])
+                : Promise.reject(new NotFoundError());
     }
 
-    push(key) {
-        return item =>
-            new Promise((resolve, reject) =>
-                resolve(this.storage[key] = item));
+    push(key, item) {
+        return Promise.resolve(this.storage[key] = item);
     }
 }
 

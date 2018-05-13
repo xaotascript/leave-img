@@ -13,7 +13,26 @@ class Cache {
                     throw error;
                 }
                 return getItemToCache()
-                    .then(this.provider.push(key));
+                    .then(item =>
+                        this.provider.push(key, item)
+                            .then(() => item)); 
+            });
+    }
+
+    getMetaAndSetNotCached(key, getItemToCache) {
+        if (typeof this.provider.head !== 'function') {
+            throw new Error('Provider doesn\'t support this method');
+        }
+
+        return this.provider
+            .head(key)
+            .catch(error => {
+                if (!(error instanceof NotCachedError)) {
+                    throw error;
+                }
+
+                return getItemToCache()
+                    .then(item => this.provider.push(key, item));
             });
     }
 }

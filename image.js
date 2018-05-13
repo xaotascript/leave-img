@@ -7,7 +7,9 @@ const canvas = new Canvas(WIDTH, HEIGHT);
 const ctx = canvas.getContext('2d');
 const imageCacheOptions = {
     bucket: process.env.S3_BUCKET,
-    generation: process.env.GENERATION,
+    generation: 'leave-img',
+    acl: 'public-read',
+    contentType: 'image/png',
     s3: {
         endpoint: process.env.S3_ENDPOINT,
         accessKeyId: process.env.S3_ACCESS_KEY,
@@ -15,6 +17,8 @@ const imageCacheOptions = {
     },
 };
 const cache = new Cache(require('./cache/providers/s3'), imageCacheOptions);
+
+const buildImageKey = numbers => `${numbers.join('')}.png`;
 
 const drawToBuffer = numbers => {
     ctx.fillStyle = '#ffffff';
@@ -39,9 +43,19 @@ const drawToBuffer = numbers => {
 }
 
 const getCached = numbers =>
-    cache.getAndSetNotCached(numbers.join(), drawToBuffer.bind(this, numbers));
+    cache.getAndSetNotCached(
+        buildImageKey(numbers),
+        drawToBuffer.bind(this, numbers),
+    );
+
+const getCachedMeta = numbers =>
+    cache.getMetaAndSetNotCached(
+        buildImageKey(numbers),
+        drawToBuffer.bind(this, numbers),
+    );
 
 module.exports = {
     drawToBuffer,
     getCached,
+    getCachedMeta,
 }
