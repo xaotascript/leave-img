@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.235.1",
     "canvas": "^1.6.9"
   }
 }
